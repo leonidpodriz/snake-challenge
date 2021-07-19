@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class DirectionBuilder {
     final Board board;
@@ -37,11 +38,22 @@ public class DirectionBuilder {
     }
 
     public boolean canBePointUsed(Point point) {
-        return isPointIsTarget(point) || (!isPointIsBarrier(point) && !isPointUsed(point));
+        if (isPointIsTarget(point)) {
+            return true;
+        }
+        if (board.getBarriers().contains(point)) {
+            return false;
+        }
+        if (usedPoints.contains(point)) {
+            return false;
+        }
+
+        return isPointIsTarget(point) || !(isPointIsBarrier(point) || isPointUsed(point));
     }
 
-    public void markPointUsed(Point point) {
+    public Point markPointUsed(Point point) {
         usedPoints.add(point);
+        return point;
     }
 
     public Point[] getChildPointsFrom(Point point) {
@@ -53,17 +65,14 @@ public class DirectionBuilder {
         };
     }
 
-    public List<Point> getUnusedPointsFrom(Point point) {
+    public Stream<Point> getUnusedPointsFrom(Point point) {
         return Arrays.stream(getChildPointsFrom(point))
                 .filter(this::canBePointUsed)
-                .collect(Collectors.toList());
+                .map(this::markPointUsed);
     }
 
     public List<RouteDirection> getDirections() {
-        List<Point> points = getUnusedPointsFrom(from);
-        List<RouteDirection> routes = points.stream().map(RouteDirection::new).collect(Collectors.toList());
-
-        points.forEach(this::markPointUsed);
+        List<RouteDirection> routes = getUnusedPointsFrom(from).map(RouteDirection::new).collect(Collectors.toList());
 
         return getDirections(routes);
     }
@@ -81,7 +90,7 @@ public class DirectionBuilder {
 
         List<RouteDirection> newRoutes = routes
                 .stream()
-                .flatMap(r -> getUnusedPointsFrom(r.getPoint()).stream().map(p -> new RouteDirection(p, r)))
+                .flatMap(r -> getUnusedPointsFrom(r.getPoint()).map(p -> new RouteDirection(p, r)))
                 .collect(Collectors.toList());
 
         return getDirections(newRoutes);

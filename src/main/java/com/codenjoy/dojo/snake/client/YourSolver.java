@@ -101,7 +101,7 @@ public class YourSolver implements Solver<Board> {
         Point apple = getApple(board);
         Point stone = getStone(board);
         Point head = getSnakeHead(board);
-        Point target = getSnakeSize(board) > 20 ? stone : apple;
+        Point target = getSnakeSize(board) > 15 ? stone : apple;
         Optional<Point[]> directionPoints = getDirectionPoints(board, head, target);
         Point nextPoint = directionPoints.map(dp -> dp[0]).orElse(new PointImpl(1, 1));
 
